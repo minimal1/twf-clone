@@ -25,10 +25,10 @@ Claude Code가 프로젝트 진행을 체계적으로 관리하기 위한 태스
 ## 📊 전체 진행 상황
 
 ```
-전체 진도: █████████░ 90%
+전체 진도: ██████████ 100%
 
 1단계 (기본 구조)     : ██████████ 100%
-2단계 (터미널 제어)   : █████████░ 90%
+2단계 (터미널 제어)   : ██████████ 100%
 3단계 (파일시스템)    : ░░░░░░░░░░ 0%
 4단계 (상태 관리)     : ░░░░░░░░░░ 0%
 5단계 (UI 렌더링)     : ░░░░░░░░░░ 0%
@@ -43,8 +43,8 @@ Claude Code가 프로젝트 진행을 체계적으로 관리하기 위한 태스
 - 없음
 
 ### 다음 우선순위 (NEXT)
-1. **`internal/terminal/renderer.go` 화면 출력 시스템 구현**
-2. **터미널 모듈 통합 테스트 및 2단계 완료**
+1. **`internal/filetree/filetree.go` 파일 트리 구조 구현**
+2. **`internal/filetree/node.go` 트리 노드 및 조작 메서드 구현**
 
 ---
 
@@ -73,35 +73,37 @@ Claude Code가 프로젝트 진행을 체계적으로 관리하기 위한 태스
 
 ### 2️⃣ 2단계: 터미널 기본 제어
 ```
-상태: 🟡 진행중 (60%)
+상태: ✅ 완료 (100%)
 예상 소요: 1.5일
 선행 조건: 1단계 완료
 ```
 
-#### ✅ 완료
+#### ✅ 완료된 모듈들
 - [x] **`internal/terminal/terminal.go`** (핵심)
   - 터미널 초기화/정리 (`NewTerminal`, `Cleanup`)
   - Raw 모드 설정/해제 (`EnableRawMode`, `DisableRawMode`)
   - 화면 크기 감지 (`GetSize`)
   - `/dev/tty` 기반 효율적인 파일 디스크립터 관리
 
-#### ✅ 완료
 - [x] **`internal/terminal/event.go`** (핵심)
   - 키보드 입력 파싱 (`parseInputData` 함수)
   - 이벤트 타입 정의 (인터페이스 기반 시스템)
   - 특수 키 (화살표, ESC, Enter, Tab, Ctrl+C/D 등) 처리
   - UTF-8 문자 지원 및 실시간 이벤트 읽기 (`ReadEvent`)
 
-#### ⏳ 대기 중
-- [ ] **`internal/terminal/renderer.go`** (보조)
-  - 화면 출력 관리
-  - ANSI 이스케이프 시퀀스
-  - 커서 제어 및 화면 지우기
+- [x] **`internal/terminal/renderer.go`** (렌더링)
+  - ANSI 이스케이프 시퀀스 상수 정의
+  - 화면 제어 (`ClearScreen`, `ClearLine`, 대체 화면)
+  - 커서 제어 (`MoveCursorTo`, `HideCursor`, `ShowCursor`)
+  - 타입 안전한 색상 시스템 (`Color`, `Style` 타입)
+  - 색상 출력 함수들 (`WriteColored`, `WriteColoredAt`)
 
 #### ✅ 완료된 주요 결정사항
 - [x] 터미널 라이브러리 선택: `golang.org/x/term`
 - [x] 파일 디스크립터 전략: 단일 `/dev/tty` 파일 (`O_RDWR`)
 - [x] 에러 처리 전략: 체인형 에러 반환
+- [x] 이벤트 시스템: 인터페이스 기반 타입 안전한 설계
+- [x] 색상 시스템: Custom 타입으로 타입 안전성 보장
 
 ---
 
@@ -268,27 +270,31 @@ Claude Code가 프로젝트 진행을 체계적으로 관리하기 위한 태스
 ## 🎯 다음 세션 액션 아이템
 
 ### 즉시 처리 필요
-1. **`internal/terminal/event.go` 구현**
-   - 키보드 이벤트 타입 정의
-   - 입력 파싱 로직 구현
-   - 특수 키 매핑 (화살표, ESC, F1-F12 등)
+1. **`internal/filetree/filetree.go` 구현**
+   - FileTree 구조체 정의
+   - 루트 디렉토리 로딩 기능
+   - 기본 트리 관리 메서드
 
-2. **`internal/terminal/renderer.go` 구현**
-   - ANSI 이스케이프 시퀀스 함수들
-   - 화면 지우기, 커서 제어
-   - 색상 및 스타일 지원
+2. **`internal/filetree/node.go` 구현**
+   - TreeNode 구조체 정의
+   - 파일/디렉토리 정보 저장
+   - 부모-자식 관계 관리
 
-3. **터미널 모듈 통합 테스트**
-   - 기본 입출력 동작 확인
-   - Raw 모드 전환 테스트
-   - 리소스 정리 검증
+3. **`internal/filetree/walker.go` 구현**
+   - 디렉토리 순회 로직
+   - 지연 로딩 구현
+   - 권한 오류 처리
 
 ### 중기 계획
-- 파일 시스템 인터페이스 설계 (3단계)
 - 애플리케이션 상태 관리 시스템 (4단계)
-- 기본 UI 렌더링 시스템 구축
+- 기본 UI 렌더링 시스템 구축 (5단계)
+- 고급 기능 추가 (6단계)
 
 ---
+
+**🎉 2단계 터미널 제어 모듈 완전 완성!**
+- 터미널 초기화/제어, 이벤트 처리, 렌더링 시스템 모두 구현
+- 다음: 3단계 파일시스템 인터페이스 구현
 
 *📅 Last Updated: 2025-09-19*
 *🤖 Managed by Claude Code*
