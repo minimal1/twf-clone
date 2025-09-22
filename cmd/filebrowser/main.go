@@ -27,7 +27,7 @@ func (app *FileBrowserApp) Initialize() error {
 	}
 	app.wd = wd
 
-	if err := app.readyTerminial(); err != nil {
+	if err := app.readyTerminal(); err != nil {
 		return err
 	}
 
