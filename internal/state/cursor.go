@@ -27,8 +27,8 @@ type CursorState struct {
 func NewCursorState() *CursorState {
 	return &CursorState{
 		position: Position{
-			Row: 2,
-			Col: 2,
+			Row: 0,
+			Col: 0,
 		},
 		history:    make([]Navigation, 0),
 		maxHistory: 50,
