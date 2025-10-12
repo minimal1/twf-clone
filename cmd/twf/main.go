@@ -106,6 +106,8 @@ func (app *App) Run() error {
 
 		app.handleEvent(event)
 
+		app.adjustScroll(height)
+
 		app.term.ClearScreen()
 		if err := layout.Render(app.term, app.appState); err != nil {
 			return err
@@ -203,5 +205,34 @@ func (app *App) toggleSelection() {
 	currentNode := app.appState.Cursor().GetCurrentNode()
 	if currentNode != nil {
 		app.appState.Selection().ToggleSelection(currentNode)
+	}
+}
+
+func (app *App) adjustScroll(screenHeight int) {
+	currentNode := app.appState.Cursor().GetCurrentNode()
+	visibleNodes := app.walker.GetVisibleNodes()
+
+	currentIndex := -1
+	for i, node := range visibleNodes {
+		if node == currentNode {
+			currentIndex = i
+			break
+		}
+	}
+
+	treeHeight := screenHeight - 1
+	scrollOffset := app.appState.View().GetScrollOffset()
+
+	if currentIndex < scrollOffset {
+		app.appState.View().SetScrollOffset(currentIndex)
+	}
+	if currentIndex >= scrollOffset+treeHeight {
+		app.appState.View().SetScrollOffset(currentIndex - treeHeight + 1)
+	}
+
+	maxScroll := max(len(visibleNodes)-treeHeight, 0)
+
+	if scrollOffset > maxScroll {
+		app.appState.View().SetScrollOffset(maxScroll)
 	}
 }

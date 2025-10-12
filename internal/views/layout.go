@@ -29,7 +29,7 @@ func (l *Layout) SetSize(width, height int) {
 func (l *Layout) Render(term *terminal.Terminal, appState *state.AppState) error {
 	statusRect := Rect{
 		X:      1,
-		Y:      l.termHeight - 1,
+		Y:      l.termHeight,
 		Width:  l.termWidth,
 		Height: 1,
 	}
@@ -38,7 +38,7 @@ func (l *Layout) Render(term *terminal.Terminal, appState *state.AppState) error
 		X:      1,
 		Y:      1,
 		Width:  l.termWidth,
-		Height: l.termHeight - 2,
+		Height: l.termHeight - 1,
 	}
 
 	if err := l.treeView.Render(term, treeRect, appState); err != nil {
