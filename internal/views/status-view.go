@@ -15,6 +15,12 @@ func (sv *StatusView) Render(term *terminal.Terminal, rect Rect, appState *state
 		return nil
 	}
 
+	promptMsg := appState.View().GetPrompt()
+	if promptMsg != "" {
+		term.WriteColoredAt(rect.Y, rect.X, promptMsg, terminal.ColorBlue)
+		return nil
+	}
+
 	path := currentNode.Path
 	selectedCount := len(appState.Selection().GetSelectedNodes())
 

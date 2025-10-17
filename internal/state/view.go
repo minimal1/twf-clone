@@ -18,12 +18,22 @@ const (
 
 const sortTypeCount = 3
 
+type InputMode int
+
+const (
+	InputModeNormal InputMode = iota
+	InputModeWaitingForMark
+	InputModeWaitingForJump
+)
+
 type ViewState struct {
 	scrollOffset int
 	sortBy       SortType
 	mode         ViewMode
 	filterText   string
 	showHidden   bool
+	promptMsg    string
+	inputMode    InputMode
 }
 
 func NewViewState() *ViewState {
@@ -33,6 +43,8 @@ func NewViewState() *ViewState {
 		mode:         ViewModeNormal,
 		filterText:   "",
 		showHidden:   false,
+		promptMsg:    "",
+		inputMode:    InputModeNormal,
 	}
 }
 
@@ -90,4 +102,26 @@ func (vs *ViewState) GetMode() ViewMode {
 }
 func (vs *ViewState) SetMode(mode ViewMode) {
 	vs.mode = mode
+}
+
+// 입력 모드
+func (vs *ViewState) GetInputMode() InputMode {
+	return vs.inputMode
+}
+func (vs *ViewState) SetInputMode(mode InputMode) {
+	vs.inputMode = mode
+}
+func (vs *ViewState) IsWaitingForInput() bool {
+	return vs.inputMode != InputModeNormal
+}
+
+// prompt 메세지 관리
+func (vs *ViewState) SetPrompt(msg string) {
+	vs.promptMsg = msg
+}
+func (vs *ViewState) GetPrompt() string {
+	return vs.promptMsg
+}
+func (vs *ViewState) ClearPrompt() {
+	vs.promptMsg = ""
 }

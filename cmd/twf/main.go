@@ -132,6 +132,14 @@ func (app *App) handleKeyPress(event terminal.KeyPressEvent) {
 
 	switch event.Key {
 	case terminal.KeyEsc, terminal.KeyCtrlC:
+		// 입력 모드 취소
+		viewState := app.appState.View()
+		if viewState.IsWaitingForInput() {
+			viewState.SetInputMode(state.InputModeNormal)
+			viewState.ClearPrompt()
+			return
+		}
+
 		app.running = false
 	case terminal.KeyArrowDown:
 		app.moveDown()
@@ -145,6 +153,23 @@ func (app *App) handleKeyPress(event terminal.KeyPressEvent) {
 }
 
 func (app *App) handleRuneKey(r rune) {
+	viewState := app.appState.View()
+
+	// 입력 모드 처리
+	switch viewState.GetInputMode() {
+	case state.InputModeWaitingForMark:
+		app.setBookmark(string(r))
+		viewState.SetInputMode(state.InputModeNormal)
+		viewState.ClearPrompt()
+		return
+	case state.InputModeWaitingForJump:
+		app.jumpToBookmark(string(r))
+		viewState.SetInputMode(state.InputModeNormal)
+		viewState.ClearPrompt()
+		return
+	}
+
+	// 일반 키 처리
 	switch r {
 	case 'q':
 		app.running = false
@@ -158,6 +183,12 @@ func (app *App) handleRuneKey(r rune) {
 		app.collapseOrParent()
 	case ' ':
 		app.toggleSelection()
+	case 'm':
+		viewState.SetInputMode(state.InputModeWaitingForMark)
+		viewState.SetPrompt(" Mark: _")
+	case '\'':
+		viewState.SetInputMode(state.InputModeWaitingForJump)
+		viewState.SetPrompt(" Jump to: _")
 	}
 }
 
@@ -234,5 +265,19 @@ func (app *App) adjustScroll(screenHeight int) {
 
 	if scrollOffset > maxScroll {
 		app.appState.View().SetScrollOffset(maxScroll)
+	}
+}
+
+func (app *App) setBookmark(mark string) {
+	currentNode := app.appState.Cursor().GetCurrentNode()
+	if currentNode != nil {
+		app.appState.Selection().SetMark(mark, currentNode)
+	}
+}
+
+func (app *App) jumpToBookmark(mark string) {
+	node := app.appState.Selection().GetMark(mark)
+	if node != nil {
+		app.appState.Cursor().SetCurrentNode(node)
 	}
 }
