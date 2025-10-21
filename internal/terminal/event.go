@@ -9,7 +9,6 @@ type EventType int
 
 const (
 	KeyPress EventType = iota
-	Resize
 )
 
 type Event interface {
@@ -19,11 +18,6 @@ type Event interface {
 type KeyPressEvent struct {
 	Key  Key
 	Rune rune
-}
-
-type ResizeEvent struct {
-	Width  int
-	Height int
 }
 
 type Key int
@@ -46,7 +40,6 @@ const (
 )
 
 func (e KeyPressEvent) EventType() EventType { return KeyPress }
-func (e ResizeEvent) EventType() EventType   { return Resize }
 
 func parseInputData(data []byte) (Event, error) {
 	if len(data) == 0 {

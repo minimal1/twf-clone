@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/minimal1/twf-clone/internal/filetree"
 	"github.com/minimal1/twf-clone/internal/state"
@@ -16,6 +18,10 @@ type App struct {
 	walker   *filetree.Walker
 	appState *state.AppState
 	running  bool
+
+	layout *views.Layout
+	width  int
+	height int
 }
 
 func NewApp(startPath string) (*App, error) {
@@ -85,32 +91,41 @@ func (app *App) Run() error {
 	app.term.HideCursor()
 	defer app.term.ShowCursor()
 
-	width, height, _ := app.term.GetSize()
+	app.width, app.height, _ = app.term.GetSize()
 
 	treeView := views.NewTreeView(app.walker)
 	statusView := views.StatusView{}
-	layout := views.NewLayout(treeView, &statusView)
-	layout.SetSize(width, height)
+	app.layout = views.NewLayout(treeView, &statusView)
+	app.layout.SetSize(app.width, app.height)
 
-	if err := layout.Render(app.term, app.appState); err != nil {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGWINCH)
+	defer signal.Stop(sigCh)
+
+	if err := app.layout.Render(app.term, app.appState); err != nil {
 		return err
 	}
 
 	app.running = true
 
 	for app.running {
-		event, err := app.term.ReadEvent()
-		if err != nil {
-			return err
-		}
+		select {
+		case <-sigCh:
+			// 터미널 리사이즈 처리
+			app.handleResize()
+		default:
+			event, err := app.term.ReadEvent()
+			if err != nil {
+				return err
+			}
 
-		app.handleEvent(event)
+			app.handleEvent(event)
+			app.adjustScroll(app.height)
 
-		app.adjustScroll(height)
-
-		app.term.ClearScreen()
-		if err := layout.Render(app.term, app.appState); err != nil {
-			return err
+			app.term.ClearScreen()
+			if err := app.layout.Render(app.term, app.appState); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -280,4 +295,25 @@ func (app *App) jumpToBookmark(mark string) {
 	if node != nil {
 		app.appState.Cursor().SetCurrentNode(node)
 	}
+}
+
+func (app *App) handleResize() {
+	newWidth, newHeight, err := app.term.GetSize()
+	if err != nil {
+		return
+	}
+
+	if newWidth == app.width && newHeight == app.height {
+		return
+	}
+
+	app.width = newWidth
+	app.height = newHeight
+
+	app.layout.SetSize(app.width, app.height)
+
+	app.adjustScroll(app.height)
+
+	app.term.ClearScreen()
+	app.layout.Render(app.term, app.appState)
 }
